@@ -5,7 +5,7 @@ def test_docker_compose_declares_wrf_service_and_mounts_project_dirs():
     text = Path("docker/docker-compose.yml").read_text(encoding="utf-8")
 
     assert "wrf:" in text
-    assert "wrf" in text.lower()
+    assert "ncar/iwrf:lulc-2024-10-04" in text
     assert "../data:/work/data" in text
     assert "../wrf:/work/wrf" in text
 

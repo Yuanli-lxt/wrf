@@ -1,6 +1,6 @@
 services:
   wrf:
-    image: ghcr.io/wrf-model/wrf:latest
+    image: ncar/iwrf:lulc-2024-10-04
     container_name: a-weather-wrf
     working_dir: /work
     stdin_open: true
