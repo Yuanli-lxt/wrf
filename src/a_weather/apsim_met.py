@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import date, datetime
+import calendar
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 
@@ -37,6 +38,8 @@ def parse_met_file(path: str | Path) -> ApsimMet:
     )
     if field_index is None:
         raise ValueError("missing APSIM field header")
+    if field_index + 1 >= len(lines) or lines[field_index + 1].split() != ["()", "()", "(MJ/m2)", "(oC)", "(oC)", "(mm)"]:
+        raise ValueError("missing APSIM units row")
 
     records: list[DailyWeather] = []
     for line in lines[field_index + 2 :]:
@@ -46,9 +49,10 @@ def parse_met_file(path: str | Path) -> ApsimMet:
         if len(parts) != 6:
             raise ValueError(f"malformed APSIM data row: {line}")
         year, doy = int(parts[0]), int(parts[1])
+        record_date = _date_from_year_day(year, doy)
         records.append(
             DailyWeather(
-                date=datetime.strptime(f"{year} {doy}", "%Y %j").date(),
+                date=record_date,
                 radn=float(parts[2]),
                 maxt=float(parts[3]),
                 mint=float(parts[4]),
@@ -85,3 +89,10 @@ def _header_float(lines: list[str], key: str) -> float:
         if match:
             return float(match.group(1))
     raise ValueError(f"missing APSIM header value: {key}")
+
+
+def _date_from_year_day(year: int, doy: int) -> date:
+    max_doy = 366 if calendar.isleap(year) else 365
+    if doy < 1 or doy > max_doy:
+        raise ValueError(f"invalid day-of-year {doy} for {year}")
+    return date(year, 1, 1) + timedelta(days=doy - 1)

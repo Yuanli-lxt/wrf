@@ -6,7 +6,7 @@ from a_weather.apsim_met import ApsimMet, DailyWeather, parse_met_file, write_me
 
 
 def test_parse_example_met_file_reads_header_and_dates():
-    met = parse_met_file("p0-1-24-25.met")
+    met = parse_met_file("tests/fixtures/p0-1-24-25.met")
 
     assert met.latitude == pytest.approx(37.94)
     assert met.longitude == pytest.approx(118.53)
@@ -43,3 +43,46 @@ def test_write_met_file_preserves_apsim_header_and_day_of_year(tmp_path):
     assert "(MJ/m2)" in text
     assert "2024   275" in text
     assert "2024   276" in text
+
+
+def test_parse_met_file_rejects_missing_units_row(tmp_path):
+    path = tmp_path / "missing-units.met"
+    path.write_text(
+        "\n".join(
+            [
+                "[weather.met.weather]",
+                "latitude = 37.94 (dec deg)",
+                "longitude = 118.53 (dec deg)",
+                "tav = 14.53 (oC)",
+                "amp = 29.84 (oC)",
+                "year   day   radn   maxt   mint   rain",
+                "2024   275   17.67   20.68  7.58   0.00",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="missing APSIM units row"):
+        parse_met_file(path)
+
+
+def test_parse_met_file_rejects_day_of_year_outside_year(tmp_path):
+    path = tmp_path / "bad-doy.met"
+    path.write_text(
+        "\n".join(
+            [
+                "[weather.met.weather]",
+                "latitude = 37.94 (dec deg)",
+                "longitude = 118.53 (dec deg)",
+                "tav = 14.53 (oC)",
+                "amp = 29.84 (oC)",
+                "year   day   radn   maxt   mint   rain",
+                " ()    ()   (MJ/m2) (oC)   (oC)   (mm)",
+                "2023   366   17.67   20.68  7.58   0.00",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="invalid day-of-year"):
+        parse_met_file(path)

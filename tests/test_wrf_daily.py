@@ -7,13 +7,13 @@ from a_weather.wrf_daily import aggregate_wrf_dataset
 
 
 def test_aggregate_wrf_dataset_to_daily_apsim_records():
-    times = pd.date_range("2024-10-01T00:00:00", periods=48, freq="h")
+    times = pd.date_range("2024-10-01T00:00:00", periods=49, freq="h")
     ds = xr.Dataset(
         data_vars={
-            "T2": ("Time", np.linspace(280.0, 300.0, 48)),
-            "SWDOWN": ("Time", np.full(48, 200.0)),
-            "RAINNC": ("Time", np.concatenate([np.linspace(0.0, 4.0, 24), np.linspace(4.0, 9.0, 24)])),
-            "RAINC": ("Time", np.zeros(48)),
+            "T2": ("Time", np.linspace(280.0, 300.0, 49)),
+            "SWDOWN": ("Time", np.full(49, 200.0)),
+            "RAINNC": ("Time", np.concatenate([np.linspace(0.0, 4.0, 25), np.linspace(4.0, 9.0, 24)])),
+            "RAINC": ("Time", np.zeros(49)),
         },
         coords={"Time": times},
     )
@@ -23,7 +23,34 @@ def test_aggregate_wrf_dataset_to_daily_apsim_records():
     assert len(records) == 2
     assert records[0].date.isoformat() == "2024-10-01"
     assert records[0].mint == pytest.approx(6.85, abs=0.01)
-    assert records[0].maxt == pytest.approx(16.64, abs=0.01)
+    assert records[0].maxt == pytest.approx(16.43, abs=0.01)
     assert records[0].radn == pytest.approx(17.28, abs=0.01)
     assert records[0].rain == pytest.approx(4.0, abs=0.01)
     assert records[1].rain == pytest.approx(5.0, abs=0.01)
+
+
+def test_aggregate_wrf_dataset_selects_nearest_grid_cell_for_real_wrf_shape():
+    times = pd.date_range("2024-10-01T00:00:00", periods=25, freq="h")
+    shape = (25, 2, 2)
+    t2 = np.full(shape, 285.0)
+    t2[:, 1, 1] = np.linspace(280.0, 300.0, 25)
+    rainnc = np.zeros(shape)
+    rainnc[:, 1, 1] = np.linspace(0.0, 6.0, 25)
+    ds = xr.Dataset(
+        data_vars={
+            "T2": (("Time", "south_north", "west_east"), t2),
+            "SWDOWN": (("Time", "south_north", "west_east"), np.full(shape, 100.0)),
+            "RAINNC": (("Time", "south_north", "west_east"), rainnc),
+            "RAINC": (("Time", "south_north", "west_east"), np.zeros(shape)),
+            "XLAT": (("south_north", "west_east"), np.array([[37.0, 37.0], [38.0, 38.0]])),
+            "XLONG": (("south_north", "west_east"), np.array([[118.0, 119.0], [118.0, 119.0]])),
+        },
+        coords={"Time": times},
+    )
+
+    records = aggregate_wrf_dataset(ds, latitude=37.94, longitude=118.53)
+
+    assert len(records) == 1
+    assert records[0].mint == pytest.approx(6.85, abs=0.01)
+    assert records[0].maxt == pytest.approx(26.02, abs=0.01)
+    assert records[0].rain == pytest.approx(6.0, abs=0.01)
