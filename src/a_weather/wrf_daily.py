@@ -14,13 +14,12 @@ def aggregate_wrf_dataset(ds: xr.Dataset, latitude: float | None = None, longitu
     missing = sorted(required.difference(ds.data_vars))
     if missing:
         raise ValueError(f"WRF dataset missing required variables: {', '.join(missing)}")
-    if "Time" not in ds.coords:
-        raise ValueError("WRF dataset missing Time coordinate")
+    times = _time_values(ds)
 
     point = _select_point(ds, latitude=latitude, longitude=longitude)
     frame = pd.DataFrame(
         {
-            "time": pd.to_datetime(point["Time"].values),
+            "time": times,
             "t2_c": np.asarray(point["T2"].values, dtype=float) - 273.15,
             "swdown_w_m2": np.asarray(point["SWDOWN"].values, dtype=float),
             "rain_total": np.asarray(point["RAINNC"].values, dtype=float) + np.asarray(point["RAINC"].values, dtype=float),
@@ -53,6 +52,29 @@ def aggregate_wrf_dataset(ds: xr.Dataset, latitude: float | None = None, longitu
             )
         )
     return records
+
+
+def _time_values(ds: xr.Dataset) -> pd.DatetimeIndex:
+    if "Times" in ds:
+        raw = np.asarray(ds["Times"].values)
+        if raw.ndim != 2:
+            raise ValueError("WRF Times variable must have Time and DateStrLen dimensions")
+        decoded = [_decode_wrf_time_row(row) for row in raw]
+        return pd.to_datetime(decoded, format="%Y-%m-%d_%H:%M:%S")
+    if "Time" in ds.coords:
+        return pd.to_datetime(ds["Time"].values)
+    raise ValueError("WRF dataset missing Time coordinate or Times variable")
+
+
+def _decode_wrf_time_row(row: np.ndarray) -> str:
+    chars: list[str] = []
+    for value in row:
+        item = value.item() if hasattr(value, "item") else value
+        if isinstance(item, bytes):
+            chars.append(item.decode("ascii"))
+        else:
+            chars.append(str(item))
+    return "".join(chars).strip()
 
 
 def _select_point(ds: xr.Dataset, latitude: float | None, longitude: float | None) -> xr.Dataset:

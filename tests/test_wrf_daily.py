@@ -54,3 +54,24 @@ def test_aggregate_wrf_dataset_selects_nearest_grid_cell_for_real_wrf_shape():
     assert records[0].mint == pytest.approx(6.85, abs=0.01)
     assert records[0].maxt == pytest.approx(26.02, abs=0.01)
     assert records[0].rain == pytest.approx(6.0, abs=0.01)
+
+
+def test_aggregate_wrf_dataset_decodes_raw_wrf_times_character_variable():
+    time_strings = ["2024-10-01_00:00:00", "2024-10-01_01:00:00", "2024-10-02_00:00:00"]
+    times_chars = np.array([list(value) for value in time_strings], dtype="S1")
+    ds = xr.Dataset(
+        data_vars={
+            "Times": (("Time", "DateStrLen"), times_chars),
+            "T2": ("Time", np.array([280.0, 282.0, 284.0])),
+            "SWDOWN": ("Time", np.array([100.0, 100.0, 0.0])),
+            "RAINNC": ("Time", np.array([0.0, 1.0, 3.0])),
+            "RAINC": ("Time", np.zeros(3)),
+        },
+        coords={"Time": np.arange(3)},
+    )
+
+    records = aggregate_wrf_dataset(ds)
+
+    assert len(records) == 1
+    assert records[0].date.isoformat() == "2024-10-01"
+    assert records[0].rain == pytest.approx(3.0, abs=0.01)
