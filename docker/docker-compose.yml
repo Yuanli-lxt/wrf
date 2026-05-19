@@ -1,0 +1,12 @@
+services:
+  wrf:
+    image: ghcr.io/wrf-model/wrf:latest
+    container_name: a-weather-wrf
+    working_dir: /work
+    stdin_open: true
+    tty: true
+    volumes:
+      - ../data:/work/data
+      - ../wrf:/work/wrf
+      - ../config:/work/config
+      - ../scripts:/work/scripts

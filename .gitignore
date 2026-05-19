@@ -1,0 +1,10 @@
+__pycache__/
+.pytest_cache/
+*.pyc
+.venv/
+data/raw_boundary/
+data/geog/
+data/wps/
+data/wrfout/
+data/generated/
+wrf/run/
