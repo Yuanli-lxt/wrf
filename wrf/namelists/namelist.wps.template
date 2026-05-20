@@ -3,7 +3,7 @@
  max_dom = 1,
  start_date = '2024-10-01_00:00:00',
  end_date   = '2024-10-04_00:00:00',
- interval_seconds = 21600,
+ interval_seconds = 10800,
  io_form_geogrid = 2,
 /
 
@@ -14,7 +14,7 @@
  j_parent_start    = 1,
  e_we              = 80,
  e_sn              = 80,
- geog_data_res     = 'default',
+ geog_data_res     = 'lowres',
  dx = 9000,
  dy = 9000,
  map_proj = 'lambert',

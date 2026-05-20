@@ -57,6 +57,9 @@ def aggregate_wrf_dataset(ds: xr.Dataset, latitude: float | None = None, longitu
 def _time_values(ds: xr.Dataset) -> pd.DatetimeIndex:
     if "Times" in ds:
         raw = np.asarray(ds["Times"].values)
+        if raw.ndim == 1:
+            decoded = [_decode_wrf_time_value(value) for value in raw]
+            return pd.to_datetime(decoded, format="%Y-%m-%d_%H:%M:%S")
         if raw.ndim != 2:
             raise ValueError("WRF Times variable must have Time and DateStrLen dimensions")
         decoded = [_decode_wrf_time_row(row) for row in raw]
@@ -67,14 +70,14 @@ def _time_values(ds: xr.Dataset) -> pd.DatetimeIndex:
 
 
 def _decode_wrf_time_row(row: np.ndarray) -> str:
-    chars: list[str] = []
-    for value in row:
-        item = value.item() if hasattr(value, "item") else value
-        if isinstance(item, bytes):
-            chars.append(item.decode("ascii"))
-        else:
-            chars.append(str(item))
-    return "".join(chars).strip()
+    return "".join(_decode_wrf_time_value(value) for value in row).strip()
+
+
+def _decode_wrf_time_value(value: object) -> str:
+    item = value.item() if hasattr(value, "item") else value
+    if isinstance(item, bytes):
+        return item.decode("ascii")
+    return str(item)
 
 
 def _select_point(ds: xr.Dataset, latitude: float | None, longitude: float | None) -> xr.Dataset:

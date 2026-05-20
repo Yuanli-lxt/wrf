@@ -75,3 +75,22 @@ def test_aggregate_wrf_dataset_decodes_raw_wrf_times_character_variable():
     assert len(records) == 1
     assert records[0].date.isoformat() == "2024-10-01"
     assert records[0].rain == pytest.approx(3.0, abs=0.01)
+
+
+def test_aggregate_wrf_dataset_decodes_one_dimensional_wrf_times_strings():
+    ds = xr.Dataset(
+        data_vars={
+            "Times": ("Time", np.array(["2024-10-01_00:00:00", "2024-10-01_01:00:00", "2024-10-02_00:00:00"])),
+            "T2": ("Time", np.array([280.0, 282.0, 284.0])),
+            "SWDOWN": ("Time", np.array([100.0, 100.0, 0.0])),
+            "RAINNC": ("Time", np.array([0.0, 1.0, 3.0])),
+            "RAINC": ("Time", np.zeros(3)),
+        },
+        coords={"Time": np.arange(3)},
+    )
+
+    records = aggregate_wrf_dataset(ds)
+
+    assert len(records) == 1
+    assert records[0].date.isoformat() == "2024-10-01"
+    assert records[0].rain == pytest.approx(3.0, abs=0.01)
