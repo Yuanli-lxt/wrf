@@ -10,6 +10,7 @@ export I_MPI_FABRICS=shm
 ulimit -s unlimited
 
 mkdir -p "$RUN_DIR"
+rm -f "$RUN_DIR"/met_em.d01.*.nc
 
 if [[ ! -d /work/data/geog/WPS_GEOG_LOW_RES ]]; then
   echo "Missing /work/data/geog/WPS_GEOG_LOW_RES. Run scripts/prepare_geog.ps1 on the Windows host first." >&2
@@ -34,9 +35,13 @@ ln -sf ungrib/Variable_Tables/Vtable.GFS Vtable
 
 cp namelist.wps geogrid.log ungrib.log metgrid.log "$RUN_DIR"/
 cp geo_em.d01.nc "$RUN_DIR"/
-cp met_em.d01.*.nc "$RUN_DIR"/
+for native_path in met_em.d01.*.nc; do
+  native_name=$(basename "$native_path")
+  safe_name=${native_name//:/-}
+  cp "$native_path" "$RUN_DIR/$safe_name"
+done
 
 test -f "$RUN_DIR/geo_em.d01.nc"
-test -f "$RUN_DIR/met_em.d01.2024-10-04_00:00:00.nc"
+test -f "$RUN_DIR/met_em.d01.2024-10-04_00-00-00.nc"
 
 echo "WPS validation complete: $RUN_DIR"

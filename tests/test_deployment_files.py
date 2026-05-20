@@ -61,7 +61,9 @@ def test_wps_validation_script_runs_expected_wps_stages():
     assert "./ungrib.exe" in text
     assert "./metgrid.exe" in text
     assert "/work/data/wps/validation_20241001_00" in text
-    assert "met_em.d01.2024-10-04_00:00:00.nc" in text
+    assert 'rm -f "$RUN_DIR"/met_em.d01.*.nc' in text
+    assert "safe_name=${native_name//:/-}" in text
+    assert "met_em.d01.2024-10-04_00-00-00.nc" in text
 
 
 def test_wrf_validation_script_runs_real_and_wrf_from_metgrid_outputs():
@@ -70,10 +72,13 @@ def test_wrf_validation_script_runs_real_and_wrf_from_metgrid_outputs():
     assert "/home/wrfuser/WRF/run" in text
     assert "/work/data/wps/validation_20241001_00" in text
     assert "/work/data/wrfout/validation_20241001_00" in text
+    assert 'rm -f "$OUT_DIR"/wrfout_d01_*' in text
     assert "LD_LIBRARY_PATH" in text
     assert "I_MPI_FABRICS=shm" in text
+    assert "met_em.d01.*_??-??-??.nc" in text
     assert "./real.exe" in text
     assert "./wrf.exe" in text
     assert "wrfinput_d01" in text
     assert "wrfbdy_d01" in text
-    assert "wrfout_d01_2024-10-01_00:00:00" in text
+    assert "safe_name=${native_name//:/-}" in text
+    assert "wrfout_d01_2024-10-01_00-00-00" in text

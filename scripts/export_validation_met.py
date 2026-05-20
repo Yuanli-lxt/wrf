@@ -19,9 +19,9 @@ OUTPUT_PATH = Path("data/generated/apsim/validation_wrf_20241001.met")
 def main() -> None:
     warnings.filterwarnings("ignore")
     cfg = load_site_config("config/site.yaml")
-    files = _ascii_wrfout_files()
+    safe_files = _ascii_wrfout_files()
     parts = []
-    for path in files:
+    for path in safe_files:
         with xr.open_dataset(path, engine="netcdf4") as ds:
             parts.append(ds[["Times", "T2", "SWDOWN", "RAINNC", "RAINC", "XLAT", "XLONG"]].load())
     combined = xr.concat(parts, dim="Time")
