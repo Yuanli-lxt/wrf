@@ -7,6 +7,11 @@ def test_prepare_geog_script_uses_official_wps_low_res_package():
     assert "https://www2.mmm.ucar.edu/wrf/src/wps_files/geog_low_res_mandatory.tar.gz" in text
     assert "data/geog" in text
     assert "tar -xzf" in text
+    assert "Assert-ArchiveSize" in text
+    assert "Test-GeogReady" in text
+    assert "WPS_GEOG_LOW_RES" in text
+    assert "topo_gmted2010_5m" in text
+    assert "modis_landuse_20class_5m_with_lakes" in text
 
 
 def test_prepare_gfs_boundary_script_downloads_validation_window_files():
