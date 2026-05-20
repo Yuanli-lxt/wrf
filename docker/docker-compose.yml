@@ -5,6 +5,8 @@ services:
     working_dir: /work
     stdin_open: true
     tty: true
+    environment:
+      NPROC: ${NPROC:-1}
     volumes:
       - ../data:/work/data
       - ../wrf:/work/wrf

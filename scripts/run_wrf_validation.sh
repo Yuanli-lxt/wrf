@@ -5,7 +5,9 @@ WRF_RUN_DIR=/home/wrfuser/WRF/run
 WPS_OUT=/work/data/wps/validation_20241001_00
 OUT_DIR=/work/data/wrfout/validation_20241001_00
 NAMELIST=/work/wrf/namelists/namelist.input.template
+NPROC=${NPROC:-1}
 export LD_LIBRARY_PATH="/opt/netcdf/lib:/opt/hdf5/lib:/opt/intel/oneapi/compiler/2023.1.0/linux/compiler/lib/intel64_lin:/opt/jasper/lib:/opt/libpng/lib:${LD_LIBRARY_PATH:-}"
+export PATH="/opt/intel/oneapi/mpi/2021.9.0/bin:${PATH}"
 export I_MPI_FABRICS=shm
 ulimit -s unlimited
 
@@ -29,11 +31,19 @@ for safe_path in "$WPS_OUT"/met_em.d01.*_??-??-??.nc; do
   ln -sf "$safe_path" "$native_name"
 done
 
-./real.exe
+if [[ "$NPROC" -gt 1 ]]; then
+  mpirun -np "$NPROC" ./real.exe
+else
+  ./real.exe
+fi
 test -f wrfinput_d01
 test -f wrfbdy_d01
 
-./wrf.exe
+if [[ "$NPROC" -gt 1 ]]; then
+  mpirun -np "$NPROC" ./wrf.exe
+else
+  ./wrf.exe
+fi
 test -f wrfout_d01_2024-10-01_00:00:00
 
 cp namelist.input rsl.out.* rsl.error.* "$OUT_DIR"/
@@ -45,4 +55,4 @@ for native_path in wrfout_d01_*; do
 done
 test -f "$OUT_DIR/wrfout_d01_2024-10-01_00-00-00"
 
-echo "WRF validation complete: $OUT_DIR"
+echo "WRF validation complete with NPROC=$NPROC: $OUT_DIR"
