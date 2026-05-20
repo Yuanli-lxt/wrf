@@ -23,3 +23,12 @@ docker manifest inspect ncar/iwrf:lulc-2024-10-04
 The first validation target is 2024-10-01 00:00 to 2024-10-04 00:00 for the site at 37.94N, 118.53E.
 
 Place WRF geographic data under `data/geog/` and boundary data under `data/raw_boundary/` before running WPS.
+
+Prepare the first validation inputs from Windows PowerShell:
+
+```powershell
+.\scripts\prepare_geog.ps1
+.\scripts\prepare_gfs_boundary.ps1
+```
+
+The geog script downloads the official WPS low-resolution mandatory package and extracts it under `data/geog/WPS_GEOG_LOW_RES`. The GFS script downloads 2024-10-01 00Z forecast hours 000-072 every 3 hours at 1.0 degree resolution under `data/raw_boundary/gfs.20241001.00.1p00`.

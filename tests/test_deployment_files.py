@@ -20,5 +20,14 @@ def test_namelists_define_single_9km_domain_centered_on_site():
     assert "118.53" in wps
     assert "dx = 9000" in wps
     assert "dy = 9000" in wps
+    assert "geog_data_path = '/work/data/geog/WPS_GEOG_LOW_RES'" in wps
     assert "time_step                           = 54" in wrf
     assert "history_interval                    = 60" in wrf
+
+
+def test_gitignore_excludes_downloaded_weather_inputs():
+    text = Path(".gitignore").read_text(encoding="utf-8")
+
+    assert "data/downloads/" in text
+    assert "data/raw_boundary/" in text
+    assert "data/geog/" in text

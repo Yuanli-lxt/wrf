@@ -23,7 +23,7 @@
  truelat1  = 30.0,
  truelat2  = 60.0,
  stand_lon = 118.53,
- geog_data_path = '/work/data/geog'
+ geog_data_path = '/work/data/geog/WPS_GEOG_LOW_RES'
 /
 
 &ungrib
