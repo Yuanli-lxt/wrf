@@ -2,12 +2,13 @@ param(
     [string]$Date = "20241001",
     [string]$Cycle = "00",
     [string]$Resolution = "1p00",
-    [string]$TargetRoot = "data/raw_boundary"
+    [string]$TargetRoot = "data/raw_boundary",
+    [int]$MaxForecastHour = 72
 )
 
 $ErrorActionPreference = "Stop"
 
-$ForecastHours = 0..72 | Where-Object { $_ % 3 -eq 0 }
+$ForecastHours = 0..$MaxForecastHour | Where-Object { $_ % 3 -eq 0 }
 $TargetDir = Join-Path $TargetRoot "gfs.$Date.$Cycle.$Resolution"
 New-Item -ItemType Directory -Force -Path $TargetDir | Out-Null
 
